@@ -7,7 +7,6 @@ import PaintCard from './components/PaintMixer';
 import AdditiveSubtractiveLab from './components/AdditiveSubtractiveLab';
 import GradientCard from './components/GradientBuilder';
 import ColorTheoryGuide from './components/ColorTheoryGuide';
-import PortfolioShowcase from './components/PortfolioShowcase';
 import { copyHex } from './utils/colorUtils';
 
 /* ─── Section Config ─── */
@@ -39,10 +38,6 @@ const SECTIONS = [
   {
     id: 'gradient', num: '07', title: 'Gradient Builder', icon: '🌈', accent: '#ff4081',
     desc: 'Create stunning CSS gradients — linear, radial, or conic — with live preview.'
-  },
-  {
-    id: 'showcase', num: '08', title: 'Portfolio Showcase', icon: '🚀', accent: '#ffea00',
-    desc: 'Apply + Create: See color theory in action on a real-world portfolio design.'
   },
 ];
 
@@ -347,16 +342,6 @@ export default function App() {
             <AdditiveSubtractiveLab mode="expanded" hex={globalHex} setColor={setColor} onCopy={onCopy} />
           </div>
           <SectionFooter activeId="mixing" onNavigate={navigateTo} />
-        </section>
-      )}
-
-      {activeSection === 'showcase' && (
-        <section className="section" id="showcase">
-          <SectionHeader section={SECTIONS[7]} />
-          <div className="section-body">
-            <PortfolioShowcase mode="expanded" onCopy={onCopy} />
-          </div>
-          <SectionFooter activeId="showcase" onNavigate={navigateTo} />
         </section>
       )}
 
