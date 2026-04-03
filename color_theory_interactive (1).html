@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060608;--s1:#0e0e14;--s2:#16161f;--s3:#1e1e2a;--b:rgba(255,255,255,0.07);--t:#f0ecf8;--m:#666680;--a:#c8ff00}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--t);font-family:'Cabinet Grotesk',sans-serif;display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+#topbar{
+  display:flex;align-items:center;gap:0;
+  background:var(--s1);border-bottom:1px solid var(--b);
+  height:48px;flex-shrink:0;position:relative;z-index:100;
+}
+#topbar .logo{
+  padding:0 1.5rem;font-weight:800;font-size:.95rem;letter-spacing:-.5px;
+  border-right:1px solid var(--b);height:100%;display:flex;align-items:center;
+  white-space:nowrap;
+}
+#topbar .logo span{color:var(--a)}
+.tab-bar{display:flex;height:100%;overflow-x:auto;flex:1}
+.tab-bar::-webkit-scrollbar{display:none}
+.tbtab{
+  padding:0 1.4rem;height:100%;display:flex;align-items:center;gap:.5rem;
+  font-size:.82rem;color:var(--m);cursor:pointer;white-space:nowrap;
+  border-right:1px solid var(--b);transition:all .18s;border-bottom:2px solid transparent;
+  background:none;border-left:none;border-top:none;font-family:inherit;
+}
+.tbtab:hover{color:var(--t);background:var(--s2)}
+.tbtab.active{color:var(--a);border-bottom-color:var(--a);background:var(--s2)}
+.tbtab .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#topbar .actions{margin-left:auto;padding:0 1rem;display:flex;gap:.5rem;align-items:center;border-left:1px solid var(--b);height:100%}
+.act-btn{
+  padding:.3rem .7rem;border-radius:5px;border:1px solid var(--b);
+  background:transparent;color:var(--m);font-size:.75rem;cursor:pointer;
+  font-family:inherit;transition:all .18s;white-space:nowrap;
+}
+.act-btn:hover{border-color:var(--a);color:var(--a)}
+
+/* ── MAIN LAYOUT ── */
+#main{display:flex;flex:1;overflow:hidden}
+
+/* ── LEFT PANEL ── */
+#left{
+  width:320px;flex-shrink:0;border-right:1px solid var(--b);
+  display:flex;flex-direction:column;overflow:hidden;background:var(--s1);
+}
+.panel-head{
+  padding:.75rem 1rem;border-bottom:1px solid var(--b);
+  font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--m);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.panel-body{flex:1;overflow-y:auto;padding:1rem}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--s3)}
+
+/* ── CENTER CANVAS AREA ── */
+#center{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;background:var(--bg);
+}
+#center canvas{cursor:crosshair;display:block}
+.canvas-hint{
+  position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  font-size:.72rem;color:var(--m);letter-spacing:1px;pointer-events:none;
+  background:rgba(6,6,8,.7);padding:.3rem .8rem;border-radius:100px;
+  border:1px solid var(--b);
+}
+
+/* ── RIGHT PANEL ── */
+#right{
+  width:280px;flex-shrink:0;border-left:1px solid var(--b);
+  display:flex;flex-direction:column;overflow:hidden;background:var(--s1);
+}
+
+/* ── CONTROLS ── */
+.ctrl-row{display:flex;flex-direction:column;gap:.25rem;margin-bottom:1rem}
+.ctrl-label{font-size:.72rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between}
+.ctrl-label code{color:var(--t);font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:0;text-transform:none}
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;-webkit-appearance:none;appearance:none;
+  outline:none;border:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.5);cursor:pointer}
+
+/* ── SWATCH GRID ── */
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:4px;margin-top:.5rem}
+.sw{
+  height:44px;border-radius:6px;cursor:pointer;transition:transform .15s;
+  position:relative;border:1px solid rgba(0,0,0,.2);
+}
+.sw:hover{transform:scale(1.08);z-index:2}
+.sw.selected{outline:2px solid #fff;outline-offset:2px}
+
+/* ── BIG SWATCH ── */
+.big-sw{
+  height:80px;border-radius:10px;margin-bottom:.75rem;
+  border:1px solid var(--b);cursor:pointer;transition:background .1s;
+  position:relative;overflow:hidden;
+}
+.big-sw .hex-label{
+  position:absolute;bottom:6px;right:8px;
+  font-family:'Space Mono',monospace;font-size:.7rem;
+  color:rgba(255,255,255,.6);pointer-events:none;
+}
+
+/* ── INFO CARDS ── */
+.icard{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:.75rem;margin-bottom:.6rem}
+.icard-title{font-size:.72rem;color:var(--m);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem}
+.icard-val{font-family:'Space Mono',monospace;font-size:.82rem;color:var(--t)}
+
+/* ── SCHEME SELECTOR ── */
+.sch-btns{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;margin-bottom:1rem}
+.sch-btn{
+  padding:.45rem .5rem;border-radius:6px;border:1px solid var(--b);
+  background:transparent;color:var(--m);font-size:.75rem;cursor:pointer;
+  font-family:inherit;transition:all .18s;text-align:center;
+}
+.sch-btn:hover{border-color:rgba(200,255,0,.3);color:var(--t)}
+.sch-btn.active{background:var(--a);border-color:var(--a);color:#000;font-weight:700}
+
+/* ── SECTION PAGES ── */
+.page{display:none;width:100%;height:100%}
+.page.active{display:flex;width:100%;height:100%}
+
+/* ── PALETTE PAGE ── */
+#pal-strips{display:flex;flex-direction:column;gap:.5rem}
+.pstrip{display:flex;border-radius:8px;overflow:hidden;height:52px}
+.pstrip .pc{flex:1;cursor:pointer;transition:flex .25s;position:relative}
+.pstrip .pc:hover{flex:2}
+.pstrip .pc .ph{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:.6rem;font-family:'Space Mono',monospace;color:rgba(255,255,255,.8);opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none}
+.pstrip .pc:hover .ph{opacity:1}
+
+/* ── RGB MIXER PAGE ── */
+.rgb-vis{width:100%;height:200px;border-radius:10px;margin-bottom:1rem;cursor:pointer;transition:background .05s;border:1px solid var(--b);display:flex;align-items:flex-end;padding:.75rem}
+.rgb-vis .overlay-hex{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.channels{display:flex;flex-direction:column;gap:.75rem}
+
+/* ── MIXER PAGE ── */
+.mix-wells{display:flex;gap:.75rem;margin-bottom:.75rem}
+.well{
+  flex:1;height:100px;border-radius:8px;cursor:pointer;
+  position:relative;border:1px solid var(--b);overflow:hidden;
+  transition:transform .15s;
+}
+.well:hover{transform:scale(1.02)}
+.well input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.well-label{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:.68rem;font-family:'Space Mono',monospace;color:rgba(255,255,255,.6);pointer-events:none}
+.mix-result{height:80px;border-radius:8px;border:1px solid var(--b);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mix-result code{font-family:'Space Mono',monospace;font-size:.9rem;text-shadow:0 1px 3px rgba(0,0,0,.6);font-weight:700}
+
+/* ── HARMONY EXPORT ── */
+.export-row{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:1rem}
+.exp-btn{padding:.3rem .65rem;border-radius:5px;border:1px solid var(--b);background:transparent;color:var(--m);font-size:.72rem;cursor:pointer;font-family:inherit;transition:all .18s}
+.exp-btn:hover{border-color:var(--a);color:var(--a)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--a);color:#000;padding:.45rem 1rem;border-radius:6px;font-size:.78rem;font-weight:700;opacity:0;transition:all .25s;pointer-events:none;z-index:999;font-family:'Space Mono',monospace}
+#toast.show{opacity:1}
+
+/* ── DEFINITION TOOLTIP ── */
+.def-tooltip{
+  position:fixed;z-index:500;
+  background:var(--s1);border:1px solid var(--b);
+  border-radius:10px;padding:.75rem 1rem;
+  max-width:240px;pointer-events:none;
+  opacity:0;transform:translateY(4px);
+  transition:opacity .18s,transform .18s;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.def-tooltip.show{opacity:1;transform:translateY(0)}
+.def-tooltip .def-title{font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--a);margin-bottom:.3rem;font-weight:700}
+.def-tooltip .def-body{font-size:.8rem;color:var(--m);line-height:1.6}
+
+/* ── INLINE DEFINITION BOX (right panel) ── */
+#defBox{
+  background:var(--s2);border:1px solid var(--b);border-radius:8px;
+  padding:.75rem;margin-bottom:.75rem;min-height:72px;
+  transition:all .2s;
+}
+#defBox .def-title{font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--a);margin-bottom:.3rem;font-weight:700}
+#defBox .def-body{font-size:.8rem;color:var(--m);line-height:1.6}
+#defBox.empty .def-title{color:var(--m)}
+#defBox.empty .def-body{color:var(--s3)}
+
+/* ── CLICKABLE EXPLAIN ── */
+[data-def]{cursor:help;border-bottom:1px dashed rgba(200,255,0,.3);transition:border-color .15s}
+[data-def]:hover{border-bottom-color:var(--a)}
+.resize-h{width:4px;background:transparent;cursor:ew-resize;flex-shrink:0;transition:background .2s}
+.resize-h:hover{background:var(--a)}
+
+/* ── LIGHTNESS TRACK ── */
+.lt-track{
+  width:16px;height:100%;border-radius:8px;cursor:ns-resize;
+  position:absolute;right:1rem;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.lt-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.3);box-shadow:0 2px 6px rgba(0,0,0,.5);position:absolute;cursor:ns-resize}
+
+/* ── COLOR HISTORY ── */
+.hist{display:flex;gap:4px;flex-wrap:wrap;margin-top:.75rem}
+.hist-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:1px solid rgba(0,0,0,.2);transition:transform .15s;flex-shrink:0}
+.hist-dot:hover{transform:scale(1.2)}
+
+/* ── GRADIENT BUILDER ── */
+.grad-preview{height:60px;border-radius:8px;margin-bottom:.75rem;border:1px solid var(--b)}
+.grad-stops{display:flex;gap:.35rem;flex-wrap:wrap}
+.gstop{width:32px;height:32px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.gstop:hover,.gstop.active{border-color:#fff;transform:scale(1.1)}
+.add-stop{width:32px;height:32px;border-radius:6px;border:1px dashed var(--b);background:transparent;color:var(--m);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.add-stop:hover{border-color:var(--a);color:var(--a)}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="logo">Color<span>Lab</span></div>
+  <div class="tab-bar">
+    <button class="tbtab active" data-page="wheel" onclick="setPage('wheel',this)">
+      <span class="dot" id="dot-wheel" style="background:#ff0000"></span> Wheel
+    </button>
+    <button class="tbtab" data-page="schemes" onclick="setPage('schemes',this)">
+      <span class="dot" id="dot-schemes" style="background:#00ccff"></span> Schemes
+    </button>
+    <button class="tbtab" data-page="rgb" onclick="setPage('rgb',this)">
+      <span class="dot" id="dot-rgb" style="background:#ff00ff"></span> RGB Mixer
+    </button>
+    <button class="tbtab" data-page="mix" onclick="setPage('mix',this)">
+      <span class="dot" id="dot-mix" style="background:#ff8800"></span> Paint Mixer
+    </button>
+    <button class="tbtab" data-page="gradient" onclick="setPage('gradient',this)">
+      <span class="dot" id="dot-gradient" style="background:linear-gradient(90deg,#f00,#0f0,#00f)"></span> Gradient
+    </button>
+  </div>
+  <div class="actions">
+    <button class="act-btn" onclick="copyCurrentHex()">Copy HEX</button>
+    <button class="act-btn" onclick="saveToHistory()">Save Color</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- ══ WHEEL PAGE ══ -->
+  <div class="page active" id="page-wheel">
+    <!-- Left -->
+    <div id="left" style="width:260px">
+      <div class="panel-head">Current Color</div>
+      <div class="panel-body">
+        <div class="big-sw" id="bigSw" onclick="copyCurrentHex()">
+          <div class="hex-label" id="bigHexLabel">#FF0000</div>
+        </div>
+        <div class="icard" data-def="hex"><div class="icard-title">HEX</div><div class="icard-val" id="ic-hex">#FF0000</div></div>
+        <div class="icard" data-def="rgb"><div class="icard-title">RGB</div><div class="icard-val" id="ic-rgb">255, 0, 0</div></div>
+        <div class="icard" data-def="hsl"><div class="icard-title">HSL</div><div class="icard-val" id="ic-hsl">0°, 100%, 50%</div></div>
+
+        <div style="margin-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem" data-def="hue">Hue <code id="hVal">0°</code></div>
+          <input type="range" id="hSlider" min="0" max="359" value="0" data-def="hue"
+            style="background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)"
+            oninput="updateFromSliders()">
+        </div>
+        <div style="margin-top:.75rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem" data-def="saturation">Saturation <code id="sVal">100%</code></div>
+          <input type="range" id="sSlider" min="0" max="100" value="100" data-def="saturation" oninput="updateFromSliders()">
+        </div>
+        <div style="margin-top:.75rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem" data-def="lightness">Lightness <code id="lVal">50%</code></div>
+          <input type="range" id="lSlider" min="5" max="95" value="50" data-def="lightness" oninput="updateFromSliders()">
+        </div>
+
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem">History</div>
+          <div class="hist" id="colorHist"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center -->
+    <div id="center">
+      <canvas id="wheelCanvas" data-def="color-wheel"></canvas>
+      <div class="canvas-hint">Drag · Click · Scroll to adjust lightness</div>
+    </div>
+
+    <!-- Right -->
+    <div id="right">
+      <div class="panel-head" data-def="tints-shades">Tints & Shades</div>
+      <div class="panel-body">
+        <div id="defBox" class="empty">
+          <div class="def-title">Click anything to learn</div>
+          <div class="def-body">Hover over any element — sliders, swatches, scheme buttons — to see its definition here.</div>
+        </div>
+        <div class="sw-grid" id="tintsGrid"></div>
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem">Saved Palette</div>
+          <div class="sw-grid" id="savedPalette"></div>
+          <div class="export-row" id="exportRow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCHEMES PAGE ══ -->
+  <div class="page" id="page-schemes">
+    <div id="left" style="width:240px">
+      <div class="panel-head">Scheme Type</div>
+      <div class="panel-body">
+        <div class="sch-btns">
+          <button class="sch-btn active" data-sch="complementary" data-def="complementary" onclick="setScheme('complementary',this)">Comple­mentary</button>
+          <button class="sch-btn" data-sch="analogous" data-def="analogous" onclick="setScheme('analogous',this)">Analogous</button>
+          <button class="sch-btn" data-sch="triadic" data-def="triadic" onclick="setScheme('triadic',this)">Triadic</button>
+          <button class="sch-btn" data-sch="split" data-def="split" onclick="setScheme('split',this)">Split-Comp</button>
+          <button class="sch-btn" data-sch="tetradic" data-def="tetradic" onclick="setScheme('tetradic',this)">Tetradic</button>
+          <button class="sch-btn" data-sch="mono" data-def="mono" onclick="setScheme('mono',this)">Mono­chromatic</button>
+        </div>
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem" data-def="lightness">Lightness <code id="schL">50%</code></div>
+          <input type="range" id="schLSlider" min="5" max="95" value="50" data-def="lightness" oninput="renderSchemeWheel()">
+          <div style="margin-top:.75rem">
+            <div class="ctrl-label" style="margin-bottom:.5rem" data-def="saturation">Saturation <code id="schS">100%</code></div>
+            <input type="range" id="schSSlider" min="0" max="100" value="100" data-def="saturation" oninput="renderSchemeWheel()">
+          </div>
+        </div>
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.35rem">Colors</div>
+          <div id="schChips" style="display:flex;flex-direction:column;gap:.35rem"></div>
+        </div>
+      </div>
+    </div>
+    <div id="center">
+      <canvas id="schWheel"></canvas>
+      <div class="canvas-hint">Drag any dot · Click wheel to set base</div>
+    </div>
+    <div id="right">
+      <div class="panel-head">Palette</div>
+      <div class="panel-body">
+        <div id="pal-strips"></div>
+        <div class="export-row" style="margin-top:.75rem" id="schExport"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RGB PAGE ══ -->
+  <div class="page" id="page-rgb">
+    <div id="left" style="width:300px">
+      <div class="panel-head">Channels</div>
+      <div class="panel-body">
+        <div class="channels">
+          <div class="ctrl-row">
+            <div class="ctrl-label" data-def="red-channel">Red <code id="rNum">200</code></div>
+            <input type="range" id="rS" min="0" max="255" value="200" data-def="red-channel" style="background:linear-gradient(90deg,#111,#ff0000)" oninput="updateRGB()">
+          </div>
+          <div class="ctrl-row">
+            <div class="ctrl-label" data-def="green-channel">Green <code id="gNum">80</code></div>
+            <input type="range" id="gS" min="0" max="255" value="80" data-def="green-channel" style="background:linear-gradient(90deg,#111,#00ff00)" oninput="updateRGB()">
+          </div>
+          <div class="ctrl-row">
+            <div class="ctrl-label" data-def="blue-channel">Blue <code id="bNum">180</code></div>
+            <input type="range" id="bS" min="0" max="255" value="180" data-def="blue-channel" style="background:linear-gradient(90deg,#111,#0066ff)" oninput="updateRGB()">
+          </div>
+        </div>
+
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem">Presets</div>
+          <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+            <div class="sw" style="background:#ff0000;width:32px;height:32px" onclick="setRGB(255,0,0)" title="Red"></div>
+            <div class="sw" style="background:#00ff00;width:32px;height:32px" onclick="setRGB(0,255,0)" title="Green"></div>
+            <div class="sw" style="background:#0000ff;width:32px;height:32px" onclick="setRGB(0,0,255)" title="Blue"></div>
+            <div class="sw" style="background:#ffff00;width:32px;height:32px" onclick="setRGB(255,255,0)" title="Yellow"></div>
+            <div class="sw" style="background:#00ffff;width:32px;height:32px" onclick="setRGB(0,255,255)" title="Cyan"></div>
+            <div class="sw" style="background:#ff00ff;width:32px;height:32px" onclick="setRGB(255,0,255)" title="Magenta"></div>
+            <div class="sw" style="background:#ffffff;width:32px;height:32px" onclick="setRGB(255,255,255)" title="White"></div>
+            <div class="sw" style="background:#000000;width:32px;height:32px;border:1px solid var(--b)" onclick="setRGB(0,0,0)" title="Black"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.35rem">Hex Input</div>
+          <input id="hexInput" type="text" placeholder="#C850B4" maxlength="7"
+            style="width:100%;background:var(--s2);border:1px solid var(--b);color:var(--t);border-radius:6px;padding:.5rem .75rem;font-family:'Space Mono',monospace;font-size:.85rem;outline:none"
+            oninput="hexInputChanged(this.value)">
+        </div>
+      </div>
+    </div>
+    <div id="center" style="flex-direction:column;gap:1.5rem">
+      <div style="position:relative;width:380px">
+        <div class="rgb-vis" id="rgbVis" onclick="copyHex(document.getElementById('rgbHexDisp').textContent)">
+          <div class="overlay-hex" id="rgbHexDisp">#C850B4</div>
+        </div>
+      </div>
+      <!-- additive circles viz -->
+      <canvas id="rgbCircles" width="380" height="200"></canvas>
+    </div>
+    <div id="right">
+      <div class="panel-head">Values</div>
+      <div class="panel-body">
+        <div class="icard"><div class="icard-title">HEX</div><div class="icard-val" id="rgb-hex">#C850B4</div></div>
+        <div class="icard"><div class="icard-title">RGB</div><div class="icard-val" id="rgb-rgb">200, 80, 180</div></div>
+        <div class="icard"><div class="icard-title">HSL</div><div class="icard-val" id="rgb-hsl">305°, 43%, 55%</div></div>
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.35rem">Complementary</div>
+          <div class="big-sw" id="rgbComp" onclick="applyComp()" style="height:50px;cursor:pointer">
+            <div class="hex-label" id="rgbCompHex"></div>
+          </div>
+          <div style="font-size:.7rem;color:var(--m);margin-top:.25rem">Click to switch</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAINT MIXER PAGE ══ -->
+  <div class="page" id="page-mix">
+    <div id="left" style="width:280px">
+      <div class="panel-head">Mix Colors</div>
+      <div class="panel-body">
+        <div class="mix-wells">
+          <div class="well" id="well1" style="background:#FF4400">
+            <input type="color" value="#FF4400" id="mi1" oninput="updateMix()">
+            <div class="well-label" id="wl1">#FF4400</div>
+          </div>
+          <div class="well" id="well2" style="background:#0044FF">
+            <input type="color" value="#0044FF" id="mi2" oninput="updateMix()">
+            <div class="well-label" id="wl2">#0044FF</div>
+          </div>
+          <div class="well" id="well3" style="background:#00BB00">
+            <input type="color" value="#00BB00" id="mi3" oninput="updateMix()">
+            <div class="well-label" id="wl3">#00BB00</div>
+          </div>
+        </div>
+
+        <div class="ctrl-row" style="margin-top:.5rem">
+          <div class="ctrl-label">Mix Ratio A:B <code id="mixRatioVal">50%</code></div>
+          <input type="range" id="mixRatio" min="0" max="100" value="50" oninput="updateMix()">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">Include C <code id="cWeightVal">0%</code></div>
+          <input type="range" id="cWeight" min="0" max="100" value="0" oninput="updateMix()">
+        </div>
+
+        <div style="margin-top:.75rem">
+          <div class="ctrl-label" style="margin-bottom:.35rem">Result</div>
+          <div class="mix-result" id="mixResult" onclick="copyHex(document.getElementById('mixResultCode').textContent)">
+            <code id="mixResultCode">#7F2200</code>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.35rem">Mix Mode</div>
+          <div style="display:flex;gap:.35rem">
+            <button class="sch-btn active" id="modeSubt" data-def="subtractive" onclick="setMixMode('subtractive',this)">Pigment</button>
+            <button class="sch-btn" id="modeAdd" data-def="additive" onclick="setMixMode('additive',this)">Light</button>
+            <button class="sch-btn" id="modeAvg" data-def="average-mix" onclick="setMixMode('average',this)">Average</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="center" style="flex-direction:column;gap:1rem;padding:2rem">
+      <!-- Mix visualization -->
+      <canvas id="mixViz" width="440" height="320"></canvas>
+    </div>
+    <div id="right">
+      <div class="panel-head">Blend Steps</div>
+      <div class="panel-body">
+        <div class="sw-grid" id="mixSteps" style="grid-template-columns:repeat(auto-fill,minmax(36px,1fr))"></div>
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.35rem">Steps <code id="stepsVal">8</code></div>
+          <input type="range" id="stepsSlider" min="3" max="16" value="8" oninput="updateMix()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GRADIENT PAGE ══ -->
+  <div class="page" id="page-gradient">
+    <div id="left" style="width:260px">
+      <div class="panel-head">Gradient Stops</div>
+      <div class="panel-body">
+        <div class="grad-stops" id="gradStops"></div>
+        <button class="add-stop" onclick="addGradStop()" style="margin-top:.5rem;width:100%;height:36px;border-radius:6px">+ Add Stop</button>
+
+        <div style="margin-top:1rem;border-top:1px solid var(--b);padding-top:1rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem">Type</div>
+          <div style="display:flex;gap:.35rem">
+            <button class="sch-btn active" id="gLinear" data-def="linear-gradient" onclick="setGradType('linear',this)">Linear</button>
+            <button class="sch-btn" id="gRadial" data-def="radial-gradient" onclick="setGradType('radial',this)">Radial</button>
+            <button class="sch-btn" id="gConic" data-def="conic-gradient" onclick="setGradType('conic',this)">Conic</button>
+          </div>
+        </div>
+        <div style="margin-top:.75rem">
+          <div class="ctrl-label" style="margin-bottom:.5rem">Angle <code id="gradAngleVal">90°</code></div>
+          <input type="range" id="gradAngle" min="0" max="360" value="90" oninput="renderGradient()">
+        </div>
+      </div>
+    </div>
+    <div id="center">
+      <canvas id="gradCanvas" style="cursor:crosshair"></canvas>
+      <div class="canvas-hint">Click canvas to pick a color from the gradient</div>
+    </div>
+    <div id="right">
+      <div class="panel-head">CSS Output</div>
+      <div class="panel-body">
+        <div style="background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:.75rem;font-family:'Space Mono',monospace;font-size:.68rem;color:var(--t);word-break:break-all;line-height:1.6" id="gradCSS"></div>
+        <button class="act-btn" style="margin-top:.75rem;width:100%" onclick="copyGradCSS()">Copy CSS</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div id="toast"></div>
+<div class="def-tooltip" id="defTooltip"><div class="def-title" id="ttTitle"></div><div class="def-body" id="ttBody"></div></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════
+function hslToRgb(h,s,l){
+  s/=100;l/=100;h=((h%360)+360)%360/360;
+  const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;
+  const f=(t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<.5)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p};
+  return[Math.round(f(h+1/3)*255),Math.round(f(h)*255),Math.round(f(h-1/3)*255)];
+}
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;
+  if(mx===mn){h=s=0}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break}h/=6}
+  return[h*360,s*100,l*100];
+}
+function rgbToHex(r,g,b){return'#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('').toUpperCase()}
+function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');return[parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]}
+function hslHex(h,s,l){return rgbToHex(...hslToRgb(h,s,l))}
+function rimHex(h){return hslHex(((h%360)+360)%360,100,50)}
+function lerpRgb(r1,g1,b1,r2,g2,b2,t){return[r1+(r2-r1)*t,g1+(g2-g1)*t,b1+(b2-b1)*t]}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function copyHex(hex){
+  navigator.clipboard.writeText(hex).catch(()=>{});
+  const t=document.getElementById('toast');t.textContent=hex;t.classList.add('show');
+  clearTimeout(t._to);t._to=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// ══════════════════════════════════════════════════════════
+// GLOBAL STATE
+// ══════════════════════════════════════════════════════════
+let curH=0,curS=100,curL=50;
+let colorHistory=[];
+let savedPalette=[];
+
+function getCurrentHex(){return hslHex(curH,curS,curL)}
+function copyCurrentHex(){copyHex(getCurrentHex())}
+
+function saveToHistory(){
+  const hex=getCurrentHex();
+  if(!colorHistory.includes(hex)){colorHistory.unshift(hex);if(colorHistory.length>16)colorHistory.pop();renderHistory()}
+}
+function renderHistory(){
+  const el=document.getElementById('colorHist');
+  el.innerHTML=colorHistory.map(h=>`<div class="hist-dot" style="background:${h}" onclick="applyHex('${h}')" title="${h}"></div>`).join('');
+}
+function applyHex(hex){
+  const[r,g,b]=hexToRgb(hex);
+  const[h,s,l]=rgbToHsl(r,g,b);
+  curH=h;curS=s;curL=l;
+  document.getElementById('hSlider').value=Math.round(h);
+  document.getElementById('hVal').textContent=Math.round(h)+'°';
+  document.getElementById('lSlider').value=l;
+  document.getElementById('sSlider').value=s;
+  renderWheelMarker();updateColorInfo();buildTints();
+}
+
+// ══════════════════════════════════════════════════════════
+// PAGE SWITCHING
+// ══════════════════════════════════════════════════════════
+function setPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tbtab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='rgb')updateRGB();
+  if(name==='schemes')renderSchemeWheel();
+  if(name==='gradient')renderGradient();
+  if(name==='mix')updateMix();
+}
+
+// ══════════════════════════════════════════════════════════
+// WHEEL (PIXEL-PERFECT)
+// ══════════════════════════════════════════════════════════
+const WC=document.getElementById('wheelCanvas');
+const WCTX=WC.getContext('2d');
+let WR,WCX,WCY;
+let wheelDragging=false;
+let wheelImageCache=null;
+
+function resizeWheel(){
+  const container=document.getElementById('page-wheel').querySelector('#center');
+  const size=Math.min(container.clientWidth-40,container.clientHeight-40,520);
+  WC.width=WC.height=size;
+  WR=size/2-10;WCX=WCY=size/2;
+  wheelImageCache=null;
+  renderWheel();
+}
+
+function buildWheelImage(){
+  const img=WCTX.createImageData(WC.width,WC.height);
+  const d=img.data;
+  for(let y=0;y<WC.height;y++){
+    for(let x=0;x<WC.width;x++){
+      const dx=x-WCX,dy=y-WCY,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>WR)continue;
+      const hue=((Math.atan2(dy,dx)*180/Math.PI)+90+360)%360;
+      const sat=dist/WR;
+      const[r,g,b]=hslToRgb(hue,sat*100,50);
+      const i=(y*WC.width+x)*4;
+      d[i]=r;d[i+1]=g;d[i+2]=b;d[i+3]=255;
+    }
+  }
+  wheelImageCache=img;
+}
+
+function renderWheel(){
+  if(!wheelImageCache)buildWheelImage();
+  WCTX.putImageData(wheelImageCache,0,0);
+  // clip circle
+  WCTX.save();WCTX.globalCompositeOperation='destination-in';
+  WCTX.beginPath();WCTX.arc(WCX,WCY,WR,0,Math.PI*2);WCTX.fill();WCTX.restore();
+  // lightness overlay
+  const l=curL/100;
+  if(l!==0.5){
+    WCTX.save();
+    WCTX.globalAlpha=Math.abs(l-0.5)*1.6;
+    WCTX.fillStyle=l>0.5?'#fff':'#000';
+    WCTX.beginPath();WCTX.arc(WCX,WCY,WR,0,Math.PI*2);WCTX.fill();
+    WCTX.restore();
+  }
+  renderWheelMarker();
+}
+
+function renderWheelMarker(){
+  // re-draw base then overlay
+  if(!wheelImageCache)buildWheelImage();
+  WCTX.putImageData(wheelImageCache,0,0);
+  WCTX.save();WCTX.globalCompositeOperation='destination-in';
+  WCTX.beginPath();WCTX.arc(WCX,WCY,WR,0,Math.PI*2);WCTX.fill();WCTX.restore();
+  const l=curL/100;
+  if(l!==0.5){
+    WCTX.save();WCTX.globalAlpha=Math.abs(l-0.5)*1.6;
+    WCTX.fillStyle=l>0.5?'#fff':'#000';
+    WCTX.beginPath();WCTX.arc(WCX,WCY,WR,0,Math.PI*2);WCTX.fill();WCTX.restore();
+  }
+  // marker position
+  const rad=(curH-90)*Math.PI/180;
+  const sr=curS/100;
+  const mx=WCX+WR*sr*Math.cos(rad),my=WCY+WR*sr*Math.sin(rad);
+  // outer ring
+  WCTX.beginPath();WCTX.arc(mx,my,13,0,Math.PI*2);
+  WCTX.strokeStyle='rgba(255,255,255,.3)';WCTX.lineWidth=2;WCTX.stroke();
+  // inner circle
+  WCTX.beginPath();WCTX.arc(mx,my,9,0,Math.PI*2);
+  WCTX.fillStyle=getCurrentHex();WCTX.fill();
+  WCTX.strokeStyle='#fff';WCTX.lineWidth=2;WCTX.stroke();
+  updateColorInfo();buildTints();
+}
+
+function updateColorInfo(){
+  const hex=getCurrentHex();
+  const[r,g,b]=hexToRgb(hex);
+  document.getElementById('bigSw').style.background=hex;
+  document.getElementById('bigHexLabel').textContent=hex;
+  document.getElementById('ic-hex').textContent=hex;
+  document.getElementById('ic-rgb').textContent=`${r}, ${g}, ${b}`;
+  document.getElementById('ic-hsl').textContent=`${Math.round(curH)}°, ${Math.round(curS)}%, ${Math.round(curL)}%`;
+  document.getElementById('dot-wheel').style.background=hex;
+  document.getElementById('lSlider').style.background=`linear-gradient(90deg, #000, hsl(${curH},${curS}%,50%), #fff)`;
+  document.getElementById('sSlider').style.background=`linear-gradient(90deg, hsl(${curH},0%,${curL}%), hsl(${curH},100%,${curL}%))`;
+}
+
+function buildTints(){
+  const el=document.getElementById('tintsGrid');
+  const swatches=[];
+  // tints (add white)
+  for(let i=9;i>=1;i--)swatches.push(hslHex(curH,curS,10+i*8));
+  el.innerHTML=swatches.map((c,i)=>`<div class="sw" style="background:${c}" title="${c}" onclick="copyHex('${c}');applyHex('${c}')"></div>`).join('');
+}
+
+function updateFromSliders(){
+  curH=+document.getElementById('hSlider').value;
+  curL=+document.getElementById('lSlider').value;
+  curS=+document.getElementById('sSlider').value;
+  document.getElementById('hVal').textContent=Math.round(curH)+'°';
+  document.getElementById('lVal').textContent=Math.round(curL)+'%';
+  document.getElementById('sVal').textContent=Math.round(curS)+'%';
+  renderWheelMarker();
+}
+
+function getWheelPos(e){
+  const rect=WC.getBoundingClientRect();
+  const t=e.touches?e.touches[0]:e;
+  return[(t.clientX-rect.left)*(WC.width/rect.width),(t.clientY-rect.top)*(WC.height/rect.height)];
+}
+function wheelHitTest(x,y){
+  const dx=x-WCX,dy=y-WCY,dist=Math.sqrt(dx*dx+dy*dy);
+  return dist<=WR;
+}
+function applyWheelClick(x,y){
+  const dx=x-WCX,dy=y-WCY,dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist>WR)return;
+  curH=((Math.atan2(dy,dx)*180/Math.PI)+90+360)%360;
+  curS=clamp(dist/WR*100,0,100);
+  document.getElementById('hSlider').value=curH;
+  document.getElementById('hVal').textContent=Math.round(curH)+'°';
+  document.getElementById('sSlider').value=curS;
+  renderWheelMarker();
+}
+
+WC.addEventListener('mousedown',e=>{const[x,y]=getWheelPos(e);if(wheelHitTest(x,y)){wheelDragging=true;applyWheelClick(x,y)}});
+WC.addEventListener('mousemove',e=>{if(!wheelDragging)return;const[x,y]=getWheelPos(e);applyWheelClick(x,y)});
+WC.addEventListener('mouseup',()=>wheelDragging=false);
+WC.addEventListener('touchstart',e=>{const[x,y]=getWheelPos(e);if(wheelHitTest(x,y)){wheelDragging=true;applyWheelClick(x,y);e.preventDefault()}},{passive:false});
+WC.addEventListener('touchmove',e=>{if(!wheelDragging)return;const[x,y]=getWheelPos(e);applyWheelClick(x,y);e.preventDefault()},{passive:false});
+WC.addEventListener('touchend',()=>wheelDragging=false);
+// scroll to change lightness
+WC.addEventListener('wheel',e=>{
+  e.preventDefault();
+  curL=clamp(curL-(e.deltaY>0?2:-2),5,95);
+  document.getElementById('lSlider').value=curL;
+  document.getElementById('lVal').textContent=Math.round(curL)+'%';
+  renderWheelMarker();
+},{passive:false});
+
+// ══════════════════════════════════════════════════════════
+// SCHEME WHEEL
+// ══════════════════════════════════════════════════════════
+const SC=document.getElementById('schWheel');
+const SCTX=SC.getContext('2d');
+let SR,SCX,SCY;
+let schemeType='complementary';
+let schBaseH=0;
+let schDragging=-1;
+let schImageCache=null;
+
+const schDefs={
+  complementary:{a:h=>[h,(h+180)%360],l:['Base','Complement']},
+  analogous:{a:h=>[h,(h+30)%360,(h-30+360)%360],l:['Base','+30°','-30°']},
+  triadic:{a:h=>[h,(h+120)%360,(h+240)%360],l:['Base','+120°','+240°']},
+  split:{a:h=>[h,(h+150)%360,(h+210)%360],l:['Base','Split A','Split B']},
+  tetradic:{a:h=>[h,(h+90)%360,(h+180)%360,(h+270)%360],l:['Base','+90°','+180°','+270°']},
+  mono:{a:h=>[h],l:['Base']},
+};
+
+function resizeSchWheel(){
+  const container=document.getElementById('page-schemes').querySelector('#center');
+  const size=Math.min(container.clientWidth-40,container.clientHeight-40,500);
+  SC.width=SC.height=size;SR=size/2-12;SCX=SCY=size/2;
+  schImageCache=null;renderSchemeWheel();
+}
+
+function buildSchImage(){
+  const img=SCTX.createImageData(SC.width,SC.height);
+  const d=img.data;
+  for(let y=0;y<SC.height;y++){
+    for(let x=0;x<SC.width;x++){
+      const dx=x-SCX,dy=y-SCY,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>SR)continue;
+      const hue=((Math.atan2(dy,dx)*180/Math.PI)+90+360)%360;
+      const sat=dist/SR;
+      const[r,g,b]=hslToRgb(hue,sat*100,50);
+      const i=(y*SC.width+x)*4;d[i]=r;d[i+1]=g;d[i+2]=b;d[i+3]=255;
+    }
+  }
+  schImageCache=img;
+}
+
+function renderSchemeWheel(){
+  if(!schImageCache)buildSchImage();
+  SCTX.putImageData(schImageCache,0,0);
+  SCTX.save();SCTX.globalCompositeOperation='destination-in';
+  SCTX.beginPath();SCTX.arc(SCX,SCY,SR,0,Math.PI*2);SCTX.fill();SCTX.restore();
+
+  const sl=+document.getElementById('schLSlider').value;
+  const ss=+document.getElementById('schSSlider').value;
+  document.getElementById('schL').textContent=sl+'%';
+  document.getElementById('schS').textContent=ss+'%';
+  if(sl!==50){
+    SCTX.save();SCTX.globalAlpha=Math.abs(sl-50)/50*1.6;
+    SCTX.fillStyle=sl>50?'#fff':'#000';
+    SCTX.beginPath();SCTX.arc(SCX,SCY,SR,0,Math.PI*2);SCTX.fill();SCTX.restore();
+  }
+
+  const def=schDefs[schemeType];
+  const angles=def.a(schBaseH);
+  const mr=SR*0.72;
+
+  // for mono: show ring of shades
+  if(schemeType==='mono'){
+    for(let i=0;i<12;i++){
+      const a=(schBaseH-90)*Math.PI/180;
+      const L=10+i*7;
+      const[r,g,b]=hslToRgb(schBaseH,ss,L);
+      const hex=rgbToHex(r,g,b);
+      const rx=SCX+(SR*0.35+i*8)*Math.cos(a),ry=SCY+(SR*0.35+i*8)*Math.sin(a);
+    }
+    // radial gradient strip
+    for(let L=5;L<=95;L+=2){
+      const hex=hslHex(schBaseH,ss,L);
+      const rad=(schBaseH-90)*Math.PI/180;
+      const t=(L-5)/90;
+      const px=SCX+(SR*0.1+t*SR*0.82)*Math.cos(rad);
+      const py=SCY+(SR*0.1+t*SR*0.82)*Math.sin(rad);
+      SCTX.beginPath();SCTX.arc(px,py,5,0,Math.PI*2);SCTX.fillStyle=hex;SCTX.fill();
+    }
+  }
+
+  // connecting shape
+  if(angles.length>1){
+    const pts=angles.map(a=>{const r=(a-90)*Math.PI/180;return[SCX+mr*Math.cos(r),SCY+mr*Math.sin(r)]});
+    SCTX.save();SCTX.beginPath();SCTX.moveTo(...pts[0]);
+    pts.slice(1).forEach(p=>SCTX.lineTo(...p));
+    if(schemeType!=='analogous'&&schemeType!=='split')SCTX.closePath();
+    SCTX.strokeStyle='rgba(255,255,255,.3)';SCTX.lineWidth=1.5;SCTX.stroke();SCTX.restore();
+  }
+
+  // markers
+  angles.forEach((a,i)=>{
+    const rad=(a-90)*Math.PI/180;
+    const mx=SCX+mr*Math.cos(rad),my=SCY+mr*Math.sin(rad);
+    const hex=hslHex(a,ss,sl);
+    SCTX.beginPath();SCTX.arc(mx,my,14,0,Math.PI*2);
+    SCTX.strokeStyle='rgba(255,255,255,.2)';SCTX.lineWidth=2;SCTX.stroke();
+    SCTX.beginPath();SCTX.arc(mx,my,10,0,Math.PI*2);
+    SCTX.fillStyle=hex;SCTX.fill();
+    SCTX.strokeStyle=i===0?'#fff':'rgba(255,255,255,.6)';SCTX.lineWidth=2;SCTX.stroke();
+  });
+
+  updateSchemeUI(sl,ss);
+}
+
+function updateSchemeUI(sl,ss){
+  const def=schDefs[schemeType];
+  const angles=def.a(schBaseH);
+  // chips
+  const chips=document.getElementById('schChips');
+  chips.innerHTML=angles.map((a,i)=>{
+    const hex=hslHex(a,ss,sl);
+    return`<div style="display:flex;align-items:center;gap:.5rem;cursor:pointer" onclick="copyHex('${hex}')">
+      <div style="width:24px;height:24px;border-radius:4px;background:${hex};flex-shrink:0;border:1px solid rgba(255,255,255,.1)"></div>
+      <div style="display:flex;flex-direction:column">
+        <code style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--t)">${hex}</code>
+        <span style="font-size:.68rem;color:var(--m)">${def.l[i]||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // palette strips
+  const palEl=document.getElementById('pal-strips');
+  const colors=buildSchemePalette(schBaseH,ss,sl);
+  const palHTML=`<div class="pstrip">${colors.map(c=>`<div class="pc" style="background:${c}" onclick="copyHex('${c}')"><div class="ph">${c}</div></div>`).join('')}</div>`;
+  // additional tint/shade rows
+  const rows=angles.map(a=>{
+    const row=[15,30,50,65,80].map(l=>hslHex(a,ss,l));
+    return`<div class="pstrip" style="margin-top:4px">${row.map(c=>`<div class="pc" style="background:${c}" onclick="copyHex('${c}')"><div class="ph">${c}</div></div>`).join('')}</div>`;
+  }).join('');
+  palEl.innerHTML=palHTML+rows;
+
+  document.getElementById('dot-schemes').style.background=hslHex(schBaseH,ss,sl);
+}
+
+function buildSchemePalette(h,s,l){
+  const def=schDefs[schemeType];
+  const angles=def.a(h);
+  return angles.map(a=>hslHex(a,s,l));
+}
+
+function setScheme(name,btn){
+  schemeType=name;
+  document.querySelectorAll('.sch-btn[data-sch]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSchemeWheel();
+}
+
+function getSchPos(e){
+  const rect=SC.getBoundingClientRect();
+  const t=e.touches?e.touches[0]:e;
+  return[(t.clientX-rect.left)*(SC.width/rect.width),(t.clientY-rect.top)*(SC.height/rect.height)];
+}
+SC.addEventListener('mousedown',e=>{
+  const[x,y]=getSchPos(e);
+  const def=schDefs[schemeType];
+  const angles=def.a(schBaseH);
+  const mr=SR*0.72;
+  let hit=-1;
+  angles.forEach((a,i)=>{const r=(a-90)*Math.PI/180;const mx=SCX+mr*Math.cos(r),my=SCY+mr*Math.sin(r);if(Math.hypot(x-mx,y-my)<22)hit=i});
+  if(hit>=0){schDragging=hit}else{
+    const dist=Math.hypot(x-SCX,y-SCY);
+    if(dist<SR){schBaseH=((Math.atan2(y-SCY,x-SCX)*180/Math.PI)+90+360)%360;renderSchemeWheel()}
+  }
+});
+SC.addEventListener('mousemove',e=>{
+  if(schDragging<0)return;
+  const[x,y]=getSchPos(e);
+  const newA=((Math.atan2(y-SCY,x-SCX)*180/Math.PI)+90+360)%360;
+  const def=schDefs[schemeType];
+  const offsets=def.a(schBaseH).map(a=>a-schBaseH);
+  schBaseH=(newA-offsets[schDragging]+360)%360;
+  renderSchemeWheel();
+});
+SC.addEventListener('mouseup',()=>schDragging=-1);
+SC.addEventListener('touchstart',e=>{
+  const[x,y]=getSchPos(e);
+  const def=schDefs[schemeType];const angles=def.a(schBaseH);const mr=SR*0.72;
+  let hit=-1;
+  angles.forEach((a,i)=>{const r=(a-90)*Math.PI/180;const mx=SCX+mr*Math.cos(r),my=SCY+mr*Math.sin(r);if(Math.hypot(x-mx,y-my)<28)hit=i});
+  if(hit>=0){schDragging=hit;e.preventDefault()}else{const dist=Math.hypot(x-SCX,y-SCY);if(dist<SR){schBaseH=((Math.atan2(y-SCY,x-SCX)*180/Math.PI)+90+360)%360;renderSchemeWheel();e.preventDefault()}}
+},{passive:false});
+SC.addEventListener('touchmove',e=>{
+  if(schDragging<0)return;
+  const[x,y]=getSchPos(e);const newA=((Math.atan2(y-SCY,x-SCX)*180/Math.PI)+90+360)%360;
+  const def=schDefs[schemeType];const offsets=def.a(schBaseH).map(a=>a-schBaseH);
+  schBaseH=(newA-offsets[schDragging]+360)%360;renderSchemeWheel();e.preventDefault();
+},{passive:false});
+SC.addEventListener('touchend',()=>schDragging=-1);
+
+// ══════════════════════════════════════════════════════════
+// RGB MIXER
+// ══════════════════════════════════════════════════════════
+function updateRGB(){
+  const r=+document.getElementById('rS').value;
+  const g=+document.getElementById('gS').value;
+  const b=+document.getElementById('bS').value;
+  document.getElementById('rNum').textContent=r;
+  document.getElementById('gNum').textContent=g;
+  document.getElementById('bNum').textContent=b;
+  const hex=rgbToHex(r,g,b);
+  const[h,s,l]=rgbToHsl(r,g,b);
+  document.getElementById('rgbVis').style.background=`rgb(${r},${g},${b})`;
+  document.getElementById('rgbHexDisp').textContent=hex;
+  document.getElementById('rgb-hex').textContent=hex;
+  document.getElementById('rgb-rgb').textContent=`${r}, ${g}, ${b}`;
+  document.getElementById('rgb-hsl').textContent=`${Math.round(h)}°, ${Math.round(s)}%, ${Math.round(l)}%`;
+  document.getElementById('hexInput').value=hex;
+  document.getElementById('dot-rgb').style.background=hex;
+  // complement
+  const ch=hslHex((h+180)%360,s,l);
+  document.getElementById('rgbComp').style.background=ch;
+  document.getElementById('rgbCompHex').textContent=ch;
+  // adaptive text color
+  const bright=(r*299+g*587+b*114)/1000;
+  document.getElementById('rgbHexDisp').style.color=bright>128?'rgba(0,0,0,.7)':'rgba(255,255,255,.8)';
+  drawRGBCircles(r,g,b);
+}
+function setRGB(r,g,b){
+  document.getElementById('rS').value=r;
+  document.getElementById('gS').value=g;
+  document.getElementById('bS').value=b;
+  updateRGB();
+}
+function hexInputChanged(v){
+  if(/^#[0-9a-fA-F]{6}$/.test(v)){
+    const[r,g,b]=hexToRgb(v);setRGB(r,g,b);
+  }
+}
+function applyComp(){
+  const hex=document.getElementById('rgbCompHex').textContent;
+  const[r,g,b]=hexToRgb(hex);setRGB(r,g,b);
+}
+
+function drawRGBCircles(r,g,b){
+  const cv=document.getElementById('rgbCircles');
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const cx=cv.width/2,cy=cv.height/2,cr=65;
+  const positions=[[-80,-35],[80,-35],[0,55]];
+  const colors=[`rgba(${r},0,0,.75)`,`rgba(0,${g},0,.75)`,`rgba(0,0,${b},.75)`];
+  const labels=['R','G','B'];
+  ctx.save();ctx.globalCompositeOperation='screen';
+  positions.forEach(([ox,oy],i)=>{
+    ctx.beginPath();ctx.arc(cx+ox,cy+oy,cr,0,Math.PI*2);
+    ctx.fillStyle=colors[i];ctx.fill();
+  });
+  ctx.restore();
+  positions.forEach(([ox,oy],i)=>{
+    ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='bold 14px Cabinet Grotesk';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(labels[i],cx+ox,cy+oy);
+  });
+  // center mix label
+  const mx=rgbToHex(r,g,b);
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='11px Space Mono';
+  ctx.textAlign='center';ctx.fillText(mx,cx,cy+10);
+}
+updateRGB();
+
+// ══════════════════════════════════════════════════════════
+// PAINT MIXER
+// ══════════════════════════════════════════════════════════
+let mixMode='subtractive';
+function setMixMode(mode,btn){
+  mixMode=mode;
+  document.querySelectorAll('#page-mix .sch-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updateMix();
+}
+
+function updateMix(){
+  const h1=document.getElementById('mi1').value;
+  const h2=document.getElementById('mi2').value;
+  const h3=document.getElementById('mi3').value;
+  const ratio=+document.getElementById('mixRatio').value/100;
+  const cw=+document.getElementById('cWeight').value/100;
+  document.getElementById('mixRatioVal').textContent=Math.round(ratio*100)+'%';
+  document.getElementById('cWeightVal').textContent=Math.round(cw*100)+'%';
+  document.getElementById('well1').style.background=h1;
+  document.getElementById('well2').style.background=h2;
+  document.getElementById('well3').style.background=h3;
+  document.getElementById('wl1').textContent=h1.toUpperCase();
+  document.getElementById('wl2').textContent=h2.toUpperCase();
+  document.getElementById('wl3').textContent=h3.toUpperCase();
+
+  const[r1,g1,b1]=hexToRgb(h1);
+  const[r2,g2,b2]=hexToRgb(h2);
+  const[r3,g3,b3]=hexToRgb(h3);
+  const abRatio=ratio*(1-cw);
+  const bRatio=(1-ratio)*(1-cw);
+  let mr,mg,mb;
+  if(mixMode==='subtractive'){
+    mr=Math.round((r1*abRatio*r2*bRatio*r3*cw/255/255)||r1*abRatio+r2*bRatio+r3*cw);
+    // proper subtractive: multiply
+    const mix2=(a,b)=>Math.round(a*b/255);
+    const blendAB=[mix2(r1,r2),mix2(g1,g2),mix2(b1,b2)];
+    mr=Math.round(blendAB[0]*(1-cw)+r3*cw);
+    mg=Math.round(blendAB[1]*(1-cw)+g3*cw);
+    mb=Math.round(blendAB[2]*(1-cw)+b3*cw);
+    // apply A:B ratio
+    mr=Math.round(r1*(ratio*(1-cw))+r2*((1-ratio)*(1-cw))+r3*cw);
+    mg=Math.round(g1*(ratio*(1-cw))+g2*((1-ratio)*(1-cw))+g3*cw);
+    mb=Math.round(b1*(ratio*(1-cw))+b2*((1-ratio)*(1-cw))+b3*cw);
+    // multiply blend
+    const fx=(a,b)=>Math.round(a*b/255);
+    mr=fx(Math.round(r1*ratio*(1-cw)+r2*(1-ratio)*(1-cw)),255-r3)+r3*cw|0;
+    mg=fx(Math.round(g1*ratio*(1-cw)+g2*(1-ratio)*(1-cw)),255-g3)+g3*cw|0;
+    mb=fx(Math.round(b1*ratio*(1-cw)+b2*(1-ratio)*(1-cw)),255-b3)+b3*cw|0;
+    // simplified & correct subtractive
+    mr=clamp(Math.round(r1*ratio*r2*(1-ratio)/128+r3*cw*0.5),0,255);
+    mg=clamp(Math.round(g1*ratio*g2*(1-ratio)/128+g3*cw*0.5),0,255);
+    mb=clamp(Math.round(b1*ratio*b2*(1-ratio)/128+b3*cw*0.5),0,255);
+  } else if(mixMode==='additive'){
+    mr=clamp(Math.round(r1*ratio*(1-cw)+r2*(1-ratio)*(1-cw)+r3*cw),0,255);
+    mg=clamp(Math.round(g1*ratio*(1-cw)+g2*(1-ratio)*(1-cw)+g3*cw),0,255);
+    mb=clamp(Math.round(b1*ratio*(1-cw)+b2*(1-ratio)*(1-cw)+b3*cw),0,255);
+  } else {
+    mr=clamp(Math.round((r1+r2+r3)/3),0,255);
+    mg=clamp(Math.round((g1+g2+g3)/3),0,255);
+    mb=clamp(Math.round((b1+b2+b3)/3),0,255);
+  }
+  const mixed=rgbToHex(mr,mg,mb);
+  document.getElementById('mixResult').style.background=mixed;
+  document.getElementById('mixResultCode').textContent=mixed;
+  document.getElementById('dot-mix').style.background=mixed;
+  drawMixViz(h1,h2,mixed,ratio);
+  buildMixSteps(h1,h2,+document.getElementById('stepsSlider').value);
+  document.getElementById('stepsVal').textContent=document.getElementById('stepsSlider').value;
+}
+
+function buildMixSteps(h1,h2,steps){
+  const[r1,g1,b1]=hexToRgb(h1);
+  const[r2,g2,b2]=hexToRgb(h2);
+  const el=document.getElementById('mixSteps');
+  el.innerHTML=Array.from({length:steps},(_, i)=>{
+    const t=i/(steps-1);
+    let r,g,b;
+    if(mixMode==='subtractive'){
+      r=clamp(Math.round(r1*(1-t)*r2*t/128),0,255);
+      g=clamp(Math.round(g1*(1-t)*g2*t/128),0,255);
+      b=clamp(Math.round(b1*(1-t)*b2*t/128),0,255);
+    } else {
+      [r,g,b]=lerpRgb(r1,g1,b1,r2,g2,b2,t).map(Math.round);
+    }
+    const hex=rgbToHex(r,g,b);
+    return`<div class="sw" style="background:${hex};height:36px" title="${hex}" onclick="copyHex('${hex}')"></div>`;
+  }).join('');
+}
+
+function drawMixViz(h1,h2,hm,ratio){
+  const cv=document.getElementById('mixViz');
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const w=cv.width,h=cv.height;
+  // gradient from A to B
+  const steps=40;
+  const[r1,g1,b1]=hexToRgb(h1);
+  const[r2,g2,b2]=hexToRgb(h2);
+  for(let i=0;i<steps;i++){
+    const t=i/steps;
+    let r,g,b;
+    if(mixMode==='subtractive'){
+      r=clamp(Math.round(r1*(1-t)*r2*t/128),0,255);
+      g=clamp(Math.round(g1*(1-t)*g2*t/128),0,255);
+      b=clamp(Math.round(b1*(1-t)*b2*t/128),0,255);
+    } else [r,g,b]=lerpRgb(r1,g1,b1,r2,g2,b2,t).map(Math.round);
+    ctx.fillStyle=`rgb(${r},${g},${b})`;
+    ctx.fillRect(Math.floor(i/steps*w),0,Math.ceil(w/steps)+1,h*0.55);
+  }
+  // circles
+  const cr=55;
+  ctx.save();
+  if(mixMode==='additive')ctx.globalCompositeOperation='screen';
+  ctx.beginPath();ctx.arc(w*0.3,h*0.78,cr,0,Math.PI*2);ctx.fillStyle=h1;ctx.fill();
+  ctx.beginPath();ctx.arc(w*0.7,h*0.78,cr,0,Math.PI*2);ctx.fillStyle=h2;ctx.fill();
+  ctx.restore();
+  ctx.beginPath();ctx.arc(w/2,h*0.78,cr*0.7,0,Math.PI*2);ctx.fillStyle=hm;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;ctx.stroke();
+  // ratio line
+  const rx=Math.round(w*ratio);
+  ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(rx,0);ctx.lineTo(rx,h*0.55);ctx.stroke();ctx.setLineDash([]);
+}
+updateMix();
+
+// ══════════════════════════════════════════════════════════
+// GRADIENT BUILDER
+// ══════════════════════════════════════════════════════════
+let gradStops=['#FF0000','#FF8800','#FFFF00'];
+let gradType='linear';
+let gradActiveStop=0;
+
+function initGradStops(){
+  renderGradStopUI();renderGradient();
+}
+function renderGradStopUI(){
+  const el=document.getElementById('gradStops');
+  el.innerHTML=gradStops.map((c,i)=>`
+    <div class="gstop ${i===gradActiveStop?'active':''}" style="background:${c};position:relative" onclick="selectStop(${i})">
+      <input type="color" value="${c}" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" oninput="updateStop(${i},this.value)">
+    </div>
+    ${gradStops.length>2?`<div style="font-size:.7rem;color:var(--m);cursor:pointer;position:absolute;top:-6px;right:-6px" onclick="removeStop(${i})">×</div>`:''}
+  `).join('');
+}
+function selectStop(i){gradActiveStop=i;renderGradStopUI()}
+function updateStop(i,v){gradStops[i]=v;renderGradStopUI();renderGradient()}
+function addGradStop(){
+  gradStops.push(hslHex(Math.random()*360,80,55));
+  gradActiveStop=gradStops.length-1;
+  renderGradStopUI();renderGradient();
+}
+function removeStop(i){if(gradStops.length<=2)return;gradStops.splice(i,1);gradActiveStop=Math.min(gradActiveStop,gradStops.length-1);renderGradStopUI();renderGradient()}
+function setGradType(t,btn){
+  gradType=t;
+  document.querySelectorAll('#page-gradient .sch-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGradient();
+}
+
+function renderGradient(){
+  const cv=document.getElementById('gradCanvas');
+  const container=document.getElementById('page-gradient').querySelector('#center');
+  cv.width=clamp(container.clientWidth-40,200,800);
+  cv.height=clamp(container.clientHeight-40,150,500);
+  const ctx=cv.getContext('2d');
+  const w=cv.width,h=cv.height;
+  ctx.clearRect(0,0,w,h);
+  const angle=+document.getElementById('gradAngle').value;
+  document.getElementById('gradAngleVal').textContent=angle+'°';
+  const stopStr=gradStops.map((c,i)=>`${c} ${Math.round(i/(gradStops.length-1)*100)}%`).join(', ');
+  let grad;
+  if(gradType==='linear'){
+    const rad=angle*Math.PI/180;
+    const dx=Math.cos(rad),dy=Math.sin(rad);
+    const hw=w/2,hh=h/2;
+    grad=ctx.createLinearGradient(hw-dx*hw,hh-dy*hh,hw+dx*hw,hh+dy*hh);
+  } else if(gradType==='radial'){
+    grad=ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.min(w,h)/2);
+  } else {
+    grad=ctx.createConicGradient(angle*Math.PI/180,w/2,h/2);
+  }
+  gradStops.forEach((c,i)=>grad.addColorStop(i/(gradStops.length-1),c));
+  ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+
+  // CSS output
+  const cssStops=gradStops.map((c,i)=>`${c} ${Math.round(i/(gradStops.length-1)*100)}%`).join(', ');
+  let css='';
+  if(gradType==='linear')css=`background: linear-gradient(${angle}deg, ${cssStops});`;
+  else if(gradType==='radial')css=`background: radial-gradient(circle, ${cssStops});`;
+  else css=`background: conic-gradient(from ${angle}deg, ${cssStops});`;
+  document.getElementById('gradCSS').textContent=css;
+  document.getElementById('dot-gradient').style.background=`linear-gradient(90deg,${gradStops.join(',')})`;
+}
+function copyGradCSS(){copyHex(document.getElementById('gradCSS').textContent)}
+
+// pick color from gradient canvas
+document.getElementById('gradCanvas').addEventListener('click',e=>{
+  const cv=document.getElementById('gradCanvas');
+  const ctx=cv.getContext('2d');
+  const rect=cv.getBoundingClientRect();
+  const x=Math.round((e.clientX-rect.left)*(cv.width/rect.width));
+  const y=Math.round((e.clientY-rect.top)*(cv.height/rect.height));
+  const d=ctx.getImageData(x,y,1,1).data;
+  copyHex(rgbToHex(d[0],d[1],d[2]));
+});
+initGradStops();
+
+// ══════════════════════════════════════════════════════════
+// DEFINITIONS ENGINE
+// ══════════════════════════════════════════════════════════
+const DEFS={
+  'hue':{title:'Hue',body:'The pure color itself — its position on the color wheel (0°–360°). Red = 0°, Yellow = 60°, Green = 120°, Cyan = 180°, Blue = 240°, Magenta = 300°.'},
+  'saturation':{title:'Saturation',body:'How vivid or grey a color is. 100% = pure, fully vivid color. 0% = completely grey. Reducing saturation "drains" the color out.'},
+  'lightness':{title:'Lightness',body:'How light or dark a color is. 50% = pure hue. 100% = white. 0% = black. Think of it as how much light is in the color.'},
+  'hex':{title:'HEX Code',body:'A 6-digit code representing a color in web/design tools. Example: #FF5733. First 2 digits = Red, middle 2 = Green, last 2 = Blue. Each pair is base-16 (0–FF = 0–255).'},
+  'rgb':{title:'RGB Model',body:'The additive color model used by screens. Each of Red, Green, and Blue channels ranges 0–255. Combining all three at 255 gives white; all at 0 gives black.'},
+  'hsl':{title:'HSL Model',body:'A human-friendly way to describe color: Hue (what color), Saturation (how vivid), Lightness (how bright). Much more intuitive than RGB for design work.'},
+  'complementary':{title:'Complementary',body:'Two colors exactly opposite each other on the wheel (180° apart). Creates maximum contrast and visual tension. Great for making things pop — think blue & orange in movie posters.'},
+  'analogous':{title:'Analogous',body:'Three colors sitting next to each other on the wheel (about 30° apart). They share undertones, creating a natural, harmonious, serene look — like a sunset or forest.'},
+  'triadic':{title:'Triadic',body:'Three colors equally spaced 120° apart, forming a perfect triangle on the wheel. Vibrant and balanced. The primary colors (Red, Yellow, Blue) are the most famous triadic set.'},
+  'split':{title:'Split-Complementary',body:'A base color plus the two colors adjacent to its complement (150° & 210° away). All the contrast of complementary but softer. Easier to balance — great for beginners.'},
+  'tetradic':{title:'Tetradic (Square)',body:'Four colors evenly spaced at 90° intervals, forming a square. Maximum color variety, but hardest to balance. Let one color dominate and use the rest as accents.'},
+  'mono':{title:'Monochromatic',body:'One hue in different tints (hue + white), shades (hue + black), and tones (hue + grey). Clean, cohesive, impossible to clash. Used heavily in minimal and luxury design.'},
+  'red-channel':{title:'Red Channel',body:'Controls the amount of red light (0–255). At 255 it contributes full red. Combined with green it creates yellow; combined with blue it creates magenta.'},
+  'green-channel':{title:'Green Channel',body:'Controls the amount of green light (0–255). Green is the most perceptually bright channel to the human eye. Red + Green = Yellow on screens (additive mixing).'},
+  'blue-channel':{title:'Blue Channel',body:'Controls the amount of blue light (0–255). Blue is the most perceptually dim channel. Blue + Red = Magenta. Blue + Green = Cyan.'},
+  'subtractive':{title:'Subtractive (Pigment) Mixing',body:'How paint and ink mix. Colors absorb (subtract) light wavelengths. Mixing more pigments = darker result. Traditional paint primaries: Red, Yellow, Blue (RYB). Modern printing uses CMYK: Cyan, Magenta, Yellow + Black.'},
+  'additive':{title:'Additive (Light) Mixing',body:'How screens mix color. Adding colored lights together = brighter. R+G+B all at full = white. Nothing = black. Primary colors are Red, Green, Blue. Used in all digital displays.'},
+  'average-mix':{title:'Average Mixing',body:'Simple mathematical average of RGB values between two colors. Not physically accurate, but useful as a neutral blend midpoint. Splits the difference evenly.'},
+  'tints-shades':{title:'Tints & Shades',body:'Tints = your color mixed with white (lighter). Shades = your color mixed with black (darker). Both keep the same hue, just varying the amount of light. Click any swatch to select that color.'},
+  'color-wheel':{title:'Color Wheel',body:'A circular arrangement of all 360 hues. Angle = Hue. Distance from center = Saturation (center is grey, edge is fully vivid). Scroll the mouse wheel to change Lightness.'},
+  'linear-gradient':{title:'Linear Gradient',body:'Color transitions in a straight line from one point to another. The angle controls the direction: 0° = bottom to top, 90° = left to right, 180° = top to bottom.'},
+  'radial-gradient':{title:'Radial Gradient',body:'Color radiates outward from a center point in a circle. The first stop is the center color, the last stop is the outer ring color.'},
+  'conic-gradient':{title:'Conic Gradient',body:'Colors rotate around a center point like a color wheel or pie chart. The angle parameter rotates the starting position of the gradient sweep.'},
+};
+
+const tt=document.getElementById('defTooltip');
+const ttTitle=document.getElementById('ttTitle');
+const ttBody=document.getElementById('ttBody');
+const defBox=document.getElementById('defBox');
+let ttTimeout;
+
+function showDef(key,x,y){
+  const d=DEFS[key];if(!d)return;
+  ttTitle.textContent=d.title;ttBody.textContent=d.body;
+  // position
+  const pw=240,ph=100;
+  let left=x+14,top=y-10;
+  if(left+pw>window.innerWidth-10)left=x-pw-14;
+  if(top+ph>window.innerHeight-10)top=window.innerHeight-ph-10;
+  tt.style.left=left+'px';tt.style.top=top+'px';
+  tt.classList.add('show');
+  // also update defBox if on wheel page
+  if(defBox){defBox.classList.remove('empty');defBox.querySelector('.def-title').textContent=d.title;defBox.querySelector('.def-body').textContent=d.body;}
+}
+function hideDef(){tt.classList.remove('show')}
+
+document.addEventListener('mouseover',e=>{
+  const el=e.target.closest('[data-def]');
+  if(!el)return;
+  clearTimeout(ttTimeout);
+  ttTimeout=setTimeout(()=>showDef(el.dataset.def,e.clientX,e.clientY),200);
+});
+document.addEventListener('mousemove',e=>{
+  const el=e.target.closest('[data-def]');
+  if(!el){hideDef();return;}
+  if(tt.classList.contains('show')){
+    const pw=240;
+    let left=e.clientX+14,top=e.clientY-10;
+    if(left+pw>window.innerWidth-10)left=e.clientX-pw-14;
+    tt.style.left=left+'px';tt.style.top=top+'px';
+  }
+});
+document.addEventListener('mouseout',e=>{
+  const el=e.target.closest('[data-def]');
+  if(el){clearTimeout(ttTimeout);hideDef();}
+});
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-def]');
+  if(!el)return;
+  const d=DEFS[el.dataset.def];if(!d)return;
+  if(defBox){
+    defBox.classList.remove('empty');
+    defBox.querySelector('.def-title').textContent=d.title;
+    defBox.querySelector('.def-body').textContent=d.body;
+    // highlight briefly
+    defBox.style.borderColor='var(--a)';
+    setTimeout(()=>defBox.style.borderColor='',800);
+  }
+});
+
+function onResize(){
+  resizeWheel();
+  if(document.getElementById('page-schemes').classList.contains('active'))resizeSchWheel();
+  if(document.getElementById('page-gradient').classList.contains('active'))renderGradient();
+}
+window.addEventListener('resize',onResize);
+
+// init
+resizeWheel();
+// scheme wheel will init when tab is activated
+SC.width=SC.height=480;SR=228;SCX=SCY=240;
+buildSchImage();renderSchemeWheel();
+
+// initial tints
+buildTints();
+updateColorInfo();
+</script>
+</body>
+</html>
