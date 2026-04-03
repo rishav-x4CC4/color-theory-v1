@@ -141,18 +141,12 @@ function HeroSection({ onStart }) {
   return (
     <section className="hero" id="hero">
       <div className="hero-content">
-        <div className="hero-meta">
-          <span className="hero-meta-item">📚 <b>Course:</b> Graphics & Animation Tools</span>
-          <span className="hero-meta-item">👨‍🏫 <b>Faculty:</b> Mr. Pankaj Badoni</span>
-        </div>
-        <div className="hero-badge">📁 LAB 4 ASSIGNMENT</div>
         <h1 className="hero-title">
           Interactive <span className="gradient-text">Color Theory</span> Explorer
         </h1>
         <p className="hero-subtitle">
           An immersive journey through color science — wheel, schemes, mixing, and gradients.
         </p>
-        <div className="hero-author">🎓 <b>Submitted by:</b> Rishav Kumar</div>
         <button onClick={onStart} className="hero-cta" style={{ border: 'none' }}>Start Exploring →</button>
       </div>
     </section>
